@@ -7,9 +7,27 @@ import java.util.Set;
 
 public class TableModel {
 
+	private String packageName;
+	private String beanName;
 	private String tableName;
 	private List<Column> columns = new ArrayList<Column>();
 	private Set<String> imports = new HashSet<String>();
+
+	public String getPackageName() {
+		return packageName;
+	}
+
+	public void setPackageName(String packageName) {
+		this.packageName = packageName;
+	}
+
+	public String getBeanName() {
+		return beanName;
+	}
+
+	public void setBeanName(String beanName) {
+		this.beanName = beanName;
+	}
 
 	public String getTableName() {
 		return tableName;
