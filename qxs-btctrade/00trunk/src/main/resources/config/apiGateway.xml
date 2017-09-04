@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+
+<apiGateway>
+	<module id="ec-doc">
+		<api id="ec-doc-busiareaimg-list" bean="busiareaImgAction" method="findImgList" login="0" auth="0" />
+	</module>
+</apiGateway>

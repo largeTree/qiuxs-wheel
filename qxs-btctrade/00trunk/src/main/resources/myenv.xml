@@ -1,0 +1,29 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<system>
+	<!-- 产品代号 -->
+	<productcode>ec</productcode>
+	<!-- 是否测试模式，测试模式不需要设置ds_info，所有数据库链接都基于db.properties -->
+	<istest>false</istest>
+	<!-- 是否使用本地内存 -->
+	<islocal>false</islocal>
+	<isdebug>false</isdebug>
+	<!-- standalone(默认单机版,为了开发方便） sentinel(哨兵,线上高可用版) -->
+	<mc_redis_pool_type>sentinel</mc_redis_pool_type>
+	<mc_redis_pool_addr>sentinel1:26633,sentinel2:26633,sentinel3:26633</mc_redis_pool_addr>
+	<mc_redis_pool_pass>CottonXu</mc_redis_pool_pass>
+	<!-- 集群 -->
+	<cluster>ecop</cluster>
+	<!-- mq消费者检查的Redis -->
+	<order_redis_host>192.168.0.5</order_redis_host>
+	<order_redis_port>6381</order_redis_port>
+	<order_redis_pass>CottonXu</order_redis_pass>
+	
+	<ypcloud_domain>https://slhdoc.b0.upaiyun.com</ypcloud_domain>
+	<ypcloud_username>admin</ypcloud_username>
+	<ypcloud_password>sunluhua2009</ypcloud_password>
+	<ypcloud_bucket>slhdoc</ypcloud_bucket>
+	<thumbnail_formats>100x100,200x200</thumbnail_formats>
+	<im4java_search_path>C:/myApp/ImageMagick-6.3.9-Q16</im4java_search_path>
+	<doc_service_download_img_retry_count>5</doc_service_download_img_retry_count>
+	<ypcloud_rootdir>test</ypcloud_rootdir>
+</system>

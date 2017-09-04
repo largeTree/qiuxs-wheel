@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<configs>
+	<!-- 
+	merge-rule: 合并规则
+		* order: 对default location 和 extends location 按照顺序查找, 找到第一个就返回
+		* replace: 对default location 和 extends location 按照 1 + N 合并(返回最后一个N配置),于order正好相反。
+		* merge: 对default location 和 extends location 读取为配置列表(仅针对XML, 合并Document)
+		* default: replace
+	-->
+	<!-- 
+	type: 配置类型
+	* Properties files (已实现)
+    * XML documents (已实现)
+    * Property list files (.plist)
+    * JNDI
+    * JDBC Datasource
+    * System properties
+    * Applet parameters
+    * Servlet parameters 
+	 -->
+	<config domain="myenv" description="环境配置" merge-rule="replace">
+	    <default type="xml" location="classpath*:myenv_base.xml"/>
+		<extends type="xml" location="classpath:myenv.xml"/>
+		<extends type="xml" location="classpath:myenv/myenv_local.xml"/>
+		<extends type="xml" location="file:///mysh/etc/web/doc/myenv.xml"/>
+		<extends type="xml" location="file:///etc/web/doc/myenv_local.xml"/>
+	</config>
+	
+	<config domain="key" description="key" merge-rule="replace">
+		<default type="properties" location="classpath*:btckey.properties"/>
+		<extends type="properties" location="file:///${user.home}/btckey.properties"/>
+	</config>
+	
+	<config domain="db" description="数据库配置" merge-rule="replace">
+		<default type="properties" location="classpath*:myenv/db.properties" />
+		<extends type="properties" location="classpath*:db.properties" />
+	</config>
+	
+	<config domain="i18n_cn" description="国际化配置中文" merge-rule="replace">
+	    <default type="properties" location="classpath*:msg/msg.properties" />
+	</config>
+	
+	<config domain="i18n_tw" description="国际化配置中文繁体" merge-rule="replace">
+	    <default type="properties" location="classpath*:msg/msg_tw.properties" />
+	</config>
+	
+	<config domain="i18n_en" description="国际化配置英文" merge-rule="replace">
+	    <default type="properties" location="classpath*:msg/msg_en.properties" />
+	</config>
+	
+</configs>
