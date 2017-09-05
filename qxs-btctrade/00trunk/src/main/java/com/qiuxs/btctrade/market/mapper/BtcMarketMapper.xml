@@ -1,0 +1,208 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.qiuxs.btctrade.market.dao.BtcMarketDao"><!--dsName="" saasAspect=""-->
+	<!-- <cache readOnly="true"/> -->
+	<!-- 启用Redis缓存时去除下方注释 -->
+	<!-- <cache eviction="LRU" type="com.qiuxs.tech.mybatis.cache.MybatisRedisCache" readOnly="true" /> -->
+    <sql id="allFields">
+		`id`,
+		`type`,
+		`high`,
+		`low`,
+		`sell`,
+		`buy`,
+		`last`,
+		`vol`,
+		`time`,
+		`createdDate`
+    </sql>
+    
+	<sql id="insertFields">
+		`id`,
+		`type`,
+		`high`,
+		`low`,
+		`sell`,
+		`buy`,
+		`last`,
+		`vol`,
+		`time`,
+		`createdDate`
+    </sql>
+	
+	<insert id="create" parameterType="com.qiuxs.btctrade.market.entity.BtcMarket">
+		insert into btc_market (<include refid="insertFields"/>)
+		values (
+			#{id},
+			#{type},
+			#{high},
+			#{low},
+			#{sell},
+			#{buy},
+			#{last},
+			#{vol},
+			#{time},
+			#{createdDate}
+		)
+	</insert>
+	
+	<insert id="createInBatch" parameterType="com.qiuxs.btctrade.market.entity.BtcMarket">
+		insert into btc_market (<include refid="insertFields"/>) values 
+		<foreach collection="list" item="item" index="index" separator=",">
+			(
+				#{item.id},
+				#{item.type},
+				#{item.high},
+				#{item.low},
+				#{item.sell},
+				#{item.buy},
+				#{item.last},
+				#{item.vol},
+				#{item.time},
+				#{item.createdDate}
+			)
+		</foreach>
+	</insert>   		
+	
+    <sql id="whereClause">
+		<if test="type != null">
+			and `type` = #{type}			
+		</if>
+		<if test="high != null">
+			and `high` = #{high}			
+		</if>
+		<if test="low != null">
+			and `low` = #{low}			
+		</if>
+		<if test="sell != null">
+			and `sell` = #{sell}			
+		</if>
+		<if test="buy != null">
+			and `buy` = #{buy}			
+		</if>
+		<if test="last != null">
+			and `last` = #{last}			
+		</if>
+		<if test="vol != null">
+			and `vol` = #{vol}			
+		</if>
+		<if test="time != null">
+			and `time` = #{time}			
+		</if>
+		<if test="createdDate != null">
+			and `createdDate` &gt;= #{createdDate}
+			<!--and `createdDate` &lt;= #{createdDate_fan1} -->
+		</if>
+	</sql>
+    
+	<select id="get" resultType="com.qiuxs.btctrade.market.entity.BtcMarket" parameterType="Long" >
+		select <include refid="allFields"/> 
+		  from btc_market 
+		 where id = #{id} 
+	</select>
+	
+	<select id="getByIds" parameterType="List" resultType="com.qiuxs.btctrade.market.entity.BtcMarket">
+		select <include refid="allFields"/> from btc_market 
+		where id in
+		<foreach collection="list" item="item" open="(" close=")" separator=",">
+			#{item}
+		</foreach>
+	</select>
+		
+	<select id="getAll" resultType="com.qiuxs.btctrade.market.entity.BtcMarket">
+		select <include refid="allFields"/> 
+		from btc_market 
+	</select>
+
+	<select id="count" resultType="long">
+		select count(*) from btc_market 
+	</select>
+	
+	<select id="getCountByWhere" parameterType="Map" resultType="Long">
+		select count(*) from btc_market 
+		<where>
+		    <include refid="whereClause"/>
+		</where>
+	</select>
+
+	<select id="findByWhere" parameterType="Map" resultType="com.qiuxs.btctrade.market.entity.BtcMarket">
+		select <include refid="allFields"/>
+		from btc_market 
+		<where>
+		    <include refid="whereClause"/>
+		</where>				
+		<if test="orderBy != null">
+			ORDER BY ${orderBy}
+			<if test="orderByDesc != null and orderByDesc == 'true'">
+				desc
+			</if>
+		</if>
+	</select>
+	
+	<sql id="setComn">		
+		<if test="type != null">
+			`type` = #{type},
+		</if>
+		<if test="high != null">
+			`high` = #{high},
+		</if>
+		<if test="low != null">
+			`low` = #{low},
+		</if>
+		<if test="sell != null">
+			`sell` = #{sell},
+		</if>
+		<if test="buy != null">
+			`buy` = #{buy},
+		</if>
+		<if test="last != null">
+			`last` = #{last},
+		</if>
+		<if test="vol != null">
+			`vol` = #{vol},
+		</if>
+		<if test="time != null">
+			`time` = #{time},
+		</if>
+		<if test="createdDate != null">
+			`createdDate` = #{createdDate}
+		</if>
+	</sql>
+	
+	<update id="update" parameterType="com.qiuxs.btctrade.market.entity.BtcMarket">
+		 update btc_market 
+		    <set>
+		    	<include refid="setComn"/>
+			</set>
+		  where id = #{id}
+	</update>
+	
+	<update id="updateByMap" parameterType="Map">
+		 update btc_market 
+		    <set>
+		    	<include refid="setComn"/>
+			</set>
+		  where id = #{id}
+	</update>
+	
+	
+	<delete id="delete">
+		delete from btc_market where id = #{id}
+	</delete>
+	
+	<delete id="multiDelete" parameterType="List">
+		delete from btc_market
+		where id in
+		<foreach collection="list" item="item" open="(" close=")" separator=",">
+			#{item}
+		</foreach>
+	</delete>
+	
+	<delete id="deleteByWhere" parameterType="Map">
+		delete from btc_market 
+		<where>
+		    <include refid="whereClause"/>
+		</where>
+	</delete>	
+	
+</mapper>    

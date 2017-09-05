@@ -26,6 +26,15 @@
 		<extends type="xml" location="file:///etc/web/doc/myenv_local.xml"/>
 	</config>
 	
+	<config domain="log4j2" description="日志" merge-rule="lastone">
+        <default type="xml" location="classpath*:log4j2_base.xml" />
+        <extends type="xml" location="classpath:log4j2.xml" />
+        <extends type="xml" location="file:///${user.home}/slh2/log4j2.xml" /> <!-- 开发者个人机器的用户目录 -->
+        <extends type="xml" location="file:///mysh/etc/web/log4j2.xml" /> <!-- 部署机器的公用目录 -->
+        <extends type="xml" location="file:///mysh/etc/web/slh2/log4j2.xml" />
+        <extends type="xml" location="file:///etc/mysh/web/slh2/log4j2.xml" />
+    </config>
+	
 	<config domain="key" description="key" merge-rule="replace">
 		<default type="properties" location="classpath*:btckey.properties"/>
 		<extends type="properties" location="file:///${user.home}/btckey.properties"/>
