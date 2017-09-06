@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<root>
+	<domain name="ServletContextListener">
+		<lifecycle class="com.qiuxs.btctrade.context.lifecycle.BtcInitLifecycle" order="0" />
+	</domain>
+</root>

@@ -40,12 +40,43 @@ public class BtcContants {
 	}
 
 	/**
+	 * 买单状态枚举
+	 * @author qiuxs
+	 *
+	 */
+	public static enum BuyOrderFlag {
+		/** 创建 */
+		Created(0, "created"),
+		/** 已取消 */
+		Canceled(1, "canceled"),
+		/** 已完成 */
+		Finished(2, "finished");
+
+		private int value;
+		private String code;
+
+		BuyOrderFlag(int value, String code) {
+			this.value = value;
+			this.code = code;
+		}
+
+		public int getValue() {
+			return this.value;
+		}
+
+		public String getCode() {
+			return this.code;
+		}
+	}
+
+	/**
 	 * Api地址
 	 * @author qiuxs
 	 *
 	 */
 	public static class Apis {
-		public static final String DOGE = "https://api.btctrade.com/api/ticker?coin=doge";
+		public static final String DOGE_MARKET = "https://api.btctrade.com/api/ticker?coin=doge";
+		public static final String ACCOUNT_INFO = "https://api.btctrade.com/api/balance/";
 	}
 
 }

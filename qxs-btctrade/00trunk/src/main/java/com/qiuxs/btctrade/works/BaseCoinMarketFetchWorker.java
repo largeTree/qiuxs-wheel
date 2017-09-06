@@ -3,6 +3,9 @@ package com.qiuxs.btctrade.works;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
+import javax.annotation.PreDestroy;
+import javax.annotation.Resource;
+
 import org.apache.log4j.Logger;
 import org.springframework.scheduling.annotation.Scheduled;
 
@@ -10,6 +13,7 @@ import com.alibaba.fastjson.JSONObject;
 import com.qiuxs.btctrade.constants.BtcContants;
 import com.qiuxs.btctrade.market.dao.BtcMarketDao;
 import com.qiuxs.btctrade.market.entity.BtcMarket;
+import com.qiuxs.btctrade.market.service.BtcMarketService;
 import com.qiuxs.fdn.utils.converter.JsonUtils;
 import com.qiuxs.fdn.utils.net.HttpClientUtil;
 import com.qiuxs.frm.service.AbstractDataAccessService;
@@ -27,6 +31,9 @@ public abstract class BaseCoinMarketFetchWorker<Svc extends AbstractDataAccessSe
 	private String api;
 	/** 虚拟币类型 */
 	private BtcContants.CoinTypes coinType;
+
+	@Resource
+	private BtcMarketService svc;
 
 	private ExecutorService thread_pool = null;
 
@@ -52,13 +59,14 @@ public abstract class BaseCoinMarketFetchWorker<Svc extends AbstractDataAccessSe
 	 */
 	private void callSave(final BtcMarket market) {
 		thread_pool.submit(() -> {
-			getSvc().create(market);
+			BaseCoinMarketFetchWorker.this.svc.create(market);
 		});
 	}
 
 	/**
 	 * 关闭线程池
 	 */
+	@PreDestroy
 	protected void closeThreadPool() {
 		this.thread_pool.shutdown();
 	}
@@ -68,18 +76,5 @@ public abstract class BaseCoinMarketFetchWorker<Svc extends AbstractDataAccessSe
 	 * @param data
 	 */
 	protected abstract void postFetch(BtcMarket data);
-
-	/**
-	 * 子类实现 返回用来保存对象的服务类
-	 * @return
-	 */
-	protected abstract Svc getSvc();
-
-	/**
-	 * 必须在此方法中调用
-	 * super.closeThreadPool();
-	 * 并声明@PreDestroy
-	 */
-	protected abstract void close();
 
 }
