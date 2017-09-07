@@ -2,6 +2,8 @@ package com.qiuxs.btctrade.works;
 
 import java.math.BigDecimal;
 
+import javax.annotation.Resource;
+
 import org.springframework.stereotype.Service;
 
 import com.qiuxs.btctrade.constants.BtcContants;
@@ -10,7 +12,9 @@ import com.qiuxs.btctrade.context.OrderCacheHolder;
 import com.qiuxs.btctrade.context.dto.AccountState;
 import com.qiuxs.btctrade.market.entity.BtcMarket;
 import com.qiuxs.btctrade.order.entity.BuyOrder;
-import com.qiuxs.btctrade.util.BtcFeeCalculateUtil;
+import com.qiuxs.btctrade.order.service.BuyOrderService;
+import com.qiuxs.btctrade.util.CallApiUtils;
+import com.qiuxs.btctrade.util.RateUtils;
 
 /**
  * 行情变动观察者
@@ -19,6 +23,9 @@ import com.qiuxs.btctrade.util.BtcFeeCalculateUtil;
  */
 @Service
 public class DogeMarketObserver implements IMarketObserver {
+
+	@Resource
+	private BuyOrderService buyOrderService;
 
 	/** 当前行情 */
 	private BtcMarket market;
@@ -34,10 +41,22 @@ public class DogeMarketObserver implements IMarketObserver {
 			order.setFlag(BtcContants.BuyOrderFlag.Created.getValue());
 			order.setPrice(this.market.getSell());
 			order.setMoney(order.getPrice().multiply(order.getNum()));
-			order.setBtcFee(BtcFeeCalculateUtil.calculateFee(BtcContants.CoinTypes.Doge, order.getMoney()));
-			// 计算最低卖价
-			order.setSalePrice(order.getPrice().multiply(BigDecimal.ONE.add(BtcFeeCalculateUtil.getRate(BtcContants.CoinTypes.Doge)))
-					.divide(BigDecimal.ONE.subtract(BtcFeeCalculateUtil.getRate(BtcContants.CoinTypes.Doge))));
+			order.setBtcFee(RateUtils.calculateFee(order.getTypeEnum(), order.getMoney()));
+			/*
+			 *	计算最低卖价
+			 *	公式  b > (a(1 + R) / (1 - R)) * (1 + U)
+			 *	b ： 最低卖价 
+			 *	a : 买价
+			 *  R ：手续费率
+			 *  U ：最低卖价增长率
+			 *  四舍五入取保留五位小数
+			 */
+			BigDecimal salePrice = order.getPrice().multiply(BigDecimal.ONE.add(RateUtils.getBtcFeeRate(order.getTypeEnum())))
+					.divide(BigDecimal.ONE.subtract(RateUtils.getBtcFeeRate(order.getTypeEnum())), BigDecimal.ROUND_HALF_UP)
+					.multiply(BigDecimal.ONE.add(RateUtils.getSalePriceAddRate(order.getTypeEnum()))).setScale(5, BigDecimal.ROUND_HALF_UP);
+			order.setSalePrice(salePrice);
+			CallApiUtils.saveBuyOrder(order);
+			buyOrderService.create(order);
 		}
 	}
 

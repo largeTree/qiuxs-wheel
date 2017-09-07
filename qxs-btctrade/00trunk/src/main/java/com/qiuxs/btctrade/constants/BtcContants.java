@@ -37,6 +37,13 @@ public class BtcContants {
 			return this.code;
 		}
 
+		public static CoinTypes valueOf(int type) {
+			if (type <= 0 || type > CoinTypes.values().length) {
+				throw new IllegalArgumentException("错误的CoinType");
+			}
+			return CoinTypes.values()[type - 1];
+		}
+
 	}
 
 	/**
@@ -75,6 +82,7 @@ public class BtcContants {
 	 *
 	 */
 	public static class Apis {
+		public static final String BUY = "https://api.btctrade.com/api/buy/";
 		public static final String DOGE_MARKET = "https://api.btctrade.com/api/ticker?coin=doge";
 		public static final String ACCOUNT_INFO = "https://api.btctrade.com/api/balance/";
 	}
