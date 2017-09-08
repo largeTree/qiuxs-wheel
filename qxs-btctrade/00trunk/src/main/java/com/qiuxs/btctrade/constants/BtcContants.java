@@ -9,32 +9,26 @@ public class BtcContants {
 	 */
 	public static enum CoinTypes {
 		/** 比特比 */
-		Btc(1, "btc"),
+		btc(1),
 		/** 以太币 */
-		Eth(2, "eth"),
+		eth(2),
 		/** 以太经典 */
-		Etc(3, "etc"),
+		etc(3),
 		/** 莱特币 */
-		Ltc(4, "ltc"),
+		ltc(4),
 		/** 狗狗币 */
-		Doge(5, "doge"),
+		doge(5),
 		/** 元宝币 */
-		Ybc(6, "ybc");
+		ybc(6);
 
 		private int value;
-		private String code;
 
-		CoinTypes(int val, String code) {
-			this.value = val;
-			this.code = code;
+		CoinTypes(int value) {
+			this.value = value;
 		}
 
 		public int getValue() {
 			return this.value;
-		}
-
-		public String getCode() {
-			return this.code;
 		}
 
 		public static CoinTypes valueOf(int type) {
@@ -53,27 +47,22 @@ public class BtcContants {
 	 */
 	public static enum BuyOrderFlag {
 		/** 创建 */
-		Created(0, "created"),
+		open(0),
 		/** 已取消 */
-		Canceled(1, "canceled"),
+		cancelled(1),
 		/** 已完成 */
-		Finished(2, "finished");
+		closed(2);
 
 		private int value;
-		private String code;
 
-		BuyOrderFlag(int value, String code) {
+		BuyOrderFlag(int value) {
 			this.value = value;
-			this.code = code;
 		}
 
 		public int getValue() {
 			return this.value;
 		}
 
-		public String getCode() {
-			return this.code;
-		}
 	}
 
 	/**
@@ -82,6 +71,7 @@ public class BtcContants {
 	 *
 	 */
 	public static class Apis {
+		public static final String FETCH_ORDER = "https://api.btctrade.com/api/fetch_order/";
 		public static final String BUY = "https://api.btctrade.com/api/buy/";
 		public static final String DOGE_MARKET = "https://api.btctrade.com/api/ticker?coin=doge";
 		public static final String ACCOUNT_INFO = "https://api.btctrade.com/api/balance/";

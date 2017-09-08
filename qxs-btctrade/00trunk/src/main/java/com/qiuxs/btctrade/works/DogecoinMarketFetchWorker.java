@@ -15,7 +15,7 @@ public class DogecoinMarketFetchWorker extends BaseCoinMarketFetchWorker<BtcMark
 	private DogeMarketObserver marketObserver;
 
 	protected DogecoinMarketFetchWorker() {
-		super(BtcContants.Apis.DOGE_MARKET, BtcContants.CoinTypes.Doge);
+		super(BtcContants.Apis.DOGE_MARKET, BtcContants.CoinTypes.doge);
 	}
 
 	@Override

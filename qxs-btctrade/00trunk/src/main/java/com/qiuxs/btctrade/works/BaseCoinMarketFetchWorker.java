@@ -6,7 +6,6 @@ import java.util.concurrent.Executors;
 import javax.annotation.PreDestroy;
 import javax.annotation.Resource;
 
-import org.apache.log4j.Logger;
 import org.springframework.scheduling.annotation.Scheduled;
 
 import com.alibaba.fastjson.JSONObject;
@@ -25,8 +24,6 @@ import com.qiuxs.frm.service.AbstractDataAccessService;
  */
 public abstract class BaseCoinMarketFetchWorker<Svc extends AbstractDataAccessService<Long, BtcMarket, BtcMarketDao>> {
 
-	private static Logger log = Logger.getLogger(BaseCoinMarketFetchWorker.class);
-
 	/** Api地址 */
 	private String api;
 	/** 虚拟币类型 */
@@ -43,10 +40,12 @@ public abstract class BaseCoinMarketFetchWorker<Svc extends AbstractDataAccessSe
 		this.thread_pool = Executors.newFixedThreadPool(3);
 	}
 
-	@Scheduled(cron = "0/1 * *  * * ? ")
+	/**
+	 * 每秒执行一次，服务器启动后5秒开始执行第一次
+	 */
+	@Scheduled(fixedDelay = 1000, initialDelay = 5000)
 	public final void work() {
 		JSONObject data = HttpClientUtil.getRetJson(this.api);
-		log.info("fetched date ---->> " + data.toJSONString());
 		BtcMarket market = JsonUtils.fromJson(data.toJSONString(), BtcMarket.class);
 		market.setType(coinType.getValue());
 		callSave(market);

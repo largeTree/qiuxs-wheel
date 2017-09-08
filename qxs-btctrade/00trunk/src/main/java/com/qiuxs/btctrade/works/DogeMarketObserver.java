@@ -14,6 +14,7 @@ import com.qiuxs.btctrade.market.entity.BtcMarket;
 import com.qiuxs.btctrade.order.entity.BuyOrder;
 import com.qiuxs.btctrade.order.service.BuyOrderService;
 import com.qiuxs.btctrade.util.CallApiUtils;
+import com.qiuxs.btctrade.util.OrderCheckUtils;
 import com.qiuxs.btctrade.util.RateUtils;
 
 /**
@@ -36,9 +37,9 @@ public class DogeMarketObserver implements IMarketObserver {
 		// 判断当前是否可买入
 		if (canBuy()) {
 			BuyOrder order = new BuyOrder();
-			order.setType(BtcContants.CoinTypes.Doge.getValue());
+			order.setType(BtcContants.CoinTypes.doge.getValue());
 			order.setNum(calculateNum());
-			order.setFlag(BtcContants.BuyOrderFlag.Created.getValue());
+			order.setFlag(BtcContants.BuyOrderFlag.open.getValue());
 			order.setPrice(this.market.getSell());
 			order.setMoney(order.getPrice().multiply(order.getNum()));
 			order.setBtcFee(RateUtils.calculateFee(order.getTypeEnum(), order.getMoney()));
@@ -55,9 +56,25 @@ public class DogeMarketObserver implements IMarketObserver {
 					.divide(BigDecimal.ONE.subtract(RateUtils.getBtcFeeRate(order.getTypeEnum())), BigDecimal.ROUND_HALF_UP)
 					.multiply(BigDecimal.ONE.add(RateUtils.getSalePriceAddRate(order.getTypeEnum()))).setScale(5, BigDecimal.ROUND_HALF_UP);
 			order.setSalePrice(salePrice);
+
+			if (!OrderCheckUtils.checkCanBuy(order)) {
+				return;
+			}
+			// 保存Btc挂单
 			CallApiUtils.saveBuyOrder(order);
+			// 持久化买单
 			buyOrderService.create(order);
+			// 缓存买单 供检查线程使用
+			OrderCacheHolder.addBuyOrder(order);
 		}
+		doSaleIfNecessary();
+	}
+
+	/**
+	 * 检查是否有需要卖出的单据
+	 */
+	private void doSaleIfNecessary() {
+		// TODO  检查是否有需要卖出的单据
 	}
 
 	/***
@@ -67,7 +84,7 @@ public class DogeMarketObserver implements IMarketObserver {
 	private BigDecimal calculateNum() {
 		AccountState state = BtcContextManager.getAccountState();
 		BigDecimal currentOrderMoney = state.getCny_balance().multiply(BigDecimal.valueOf(0.1D));
-		BigDecimal num = currentOrderMoney.divide(this.market.getSell());
+		BigDecimal num = currentOrderMoney.divide(this.market.getSell(), BigDecimal.ROUND_HALF_UP);
 		return num;
 	}
 
@@ -76,9 +93,9 @@ public class DogeMarketObserver implements IMarketObserver {
 	 * @return
 	 */
 	private boolean canBuy() {
-		// 当前缓存的买单数量不大于最大买单数量，卖一价小于（最低价*购买价因子）时买入
-		if (OrderCacheHolder.getBuyOrderCount(BtcContants.CoinTypes.Doge) <= BtcContextManager.getMaxBuyOrder(BtcContants.CoinTypes.Doge)
-				&& this.market.getSell().compareTo(this.market.getLow().multiply(BtcContextManager.getBuyFactor(BtcContants.CoinTypes.Doge))) < 1) {
+		// 当前缓存的买单数量小于最大买单数量，卖一价小于（最低价*购买价因子）时买入
+		if (OrderCacheHolder.getBuyOrderCount(BtcContants.CoinTypes.doge) < BtcContextManager.getMaxBuyOrder(BtcContants.CoinTypes.doge)
+				&& this.market.getSell().compareTo(this.market.getLow().multiply(BtcContextManager.getBuyFactor(BtcContants.CoinTypes.doge))) < 1) {
 			return true;
 		}
 		return false;

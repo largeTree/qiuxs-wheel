@@ -28,8 +28,9 @@ public class CallApiUtils {
 	 */
 	public static String saveBuyOrder(BuyOrder order) {
 		StringBuilder params = new StringBuilder();
-		params.append("key=").append(BtcContextManager.getPublicKey())
-				.append("&coin=").append(BtcContants.CoinTypes.valueOf(order.getType()).toString().toLowerCase())
+		//		.append("key=").append(BtcContextManager.getPublicKey())
+
+		params.append("coin=").append(BtcContants.CoinTypes.valueOf(order.getType()).toString().toLowerCase())
 				.append("&amount=").append(order.getNum())
 				.append("&price=").append(order.getPrice());
 		JSONObject res = callPrivateApi(BtcContants.Apis.BUY, params.toString());
@@ -37,38 +38,25 @@ public class CallApiUtils {
 		return order.getBtcOrderId();
 	}
 
-//	public static void main(String[] args) {
-//		BtcContextManager.init();
-//		BuyOrder order = new BuyOrder();
-//		order.setType(BtcContants.CoinTypes.Doge.getValue());
-//		order.setNum(BigDecimal.valueOf(100D));
-//		order.setFlag(BtcContants.BuyOrderFlag.Created.getValue());
-//		order.setPrice(BigDecimal.valueOf(0.012D));
-//		order.setMoney(order.getPrice().multiply(order.getNum()));
-//		order.setBtcFee(RateUtils.calculateFee(order.getTypeEnum(), order.getMoney()));
-//		/*
-//		 *	计算最低卖价
-//		 *	公式  b > (a(1 + R) / (1 - R)) * (1 + U)
-//		 *	b ： 最低卖价 
-//		 *	a : 买价
-//		 *  R ：手续费率
-//		 *  U ：最低卖价增长率	 
-//		 */
-//		BigDecimal salePrice = order.getPrice().multiply(BigDecimal.ONE.add(RateUtils.getBtcFeeRate(order.getTypeEnum())))
-//				.divide(BigDecimal.ONE.subtract(RateUtils.getBtcFeeRate(order.getTypeEnum())), BigDecimal.ROUND_HALF_UP)
-//				.multiply(BigDecimal.ONE.add(RateUtils.getSalePriceAddRate(order.getTypeEnum()))).setScale(5, BigDecimal.ROUND_HALF_UP);
-//		order.setSalePrice(salePrice);
-//		order.setBtcOrderId(saveBuyOrder(order));
-//		BuyOrderService svc = ApplicationContextHolder.getBean(BuyOrderService.class);
-//		svc.create(order);
-//	}
+	/**
+	 * 获取订单信息
+	 * @param orderId
+	 *  订单ID
+	 * @return
+	 */
+	public static BtcOrderDetailDTO fetchOrder(String orderId) {
+		StringBuilder params = new StringBuilder();
+		params.append("id=").append(orderId);
+		JSONObject res = callPrivateApi(BtcContants.Apis.FETCH_ORDER, params.toString());
+		return JSON.toJavaObject(res, BtcOrderDetailDTO.class);
+	}
 
 	/**
 	 * 获取账户状态
 	 * @return
 	 */
 	public static AccountState getAccountState() {
-		String params = "key=" + BtcContextManager.getPublicKey();
+		String params = "";
 		JSONObject res = callPrivateApi(BtcContants.Apis.ACCOUNT_INFO, params);
 		return JSON.toJavaObject(res, AccountState.class);
 	}
@@ -77,13 +65,19 @@ public class CallApiUtils {
 	 * 统一调取Api
 	 * @param api
 	 * @param params
+	 * 	参数字符串
+	 *  不需要包括自增数，version，及签名
 	 * @return
 	 */
 	private static JSONObject callPrivateApi(String api, String params) {
+		if (params != null && params.length() > 0) {
+			params += "&";
+		}
+		params += "key=" + BtcContextManager.getPublicKey();
 		params += "&nonce=" + System.currentTimeMillis();
 		params += "&version=2";
 		params += "&signature=" + sign(params);
-		JSONObject res = HttpClientUtil.postStringRetJson(api, params, ContentType.APPLICATION_FORM_URLENCODED, Constant.UTF8);
+		JSONObject res = HttpClientUtil.postStringRetJson(api, params, ContentType.create("application/x-www-form-urlencoded", Constant.UTF8));
 		if (res.containsKey("result") && !res.getBooleanValue("result")) {
 			throw new RuntimeException(res.getString("message"));
 		}

@@ -26,17 +26,17 @@ public class BtcContextManager {
 	/** 当前账户状态 */
 	private static AccountState accountState;
 	/** 买入价因子 */
-	private static Map<String, BigDecimal> buy_factor = new ConcurrentHashMap<String, BigDecimal>();
+	private static Map<BtcContants.CoinTypes, BigDecimal> buy_factor = new ConcurrentHashMap<BtcContants.CoinTypes, BigDecimal>();
 	static {
-		// 初始化个币种买入价因子
-		buy_factor.put(BtcContants.CoinTypes.Doge.getCode(), BigDecimal.valueOf(1.2D));
+		// 初始化各币种买入价因子
+		buy_factor.put(BtcContants.CoinTypes.doge, BigDecimal.valueOf(1.2D));
 	}
 
 	/** 买单最大数量 */
-	private static Map<String, Integer> max_buy_order = new ConcurrentHashMap<String, Integer>();
+	private static Map<BtcContants.CoinTypes, Integer> max_buy_order = new ConcurrentHashMap<BtcContants.CoinTypes, Integer>();
 	static {
 		// 初始化各币种 最大买单数量
-		max_buy_order.put(BtcContants.CoinTypes.Doge.getCode(), 10);
+		max_buy_order.put(BtcContants.CoinTypes.doge, 1);
 	}
 
 	/**
@@ -45,9 +45,15 @@ public class BtcContextManager {
 	public static void init() {
 		publicKey = UConfigUtils.getConfig("key").getString("public");
 		privateKey = UConfigUtils.getConfig("key").getString("private");
+		// 加载账户状态
 		updateCurrentAccountInfo();
+		// 加载数据库中 处于打开状态的单据
+		OrderCacheHolder.init();
 	}
 
+	/**
+	 * 更新当前账户状态
+	 */
 	private static void updateCurrentAccountInfo() {
 		AccountState accountState = CallApiUtils.getAccountState();
 		BtcContextManager.accountState = accountState;
@@ -84,7 +90,7 @@ public class BtcContextManager {
 	 * @return
 	 */
 	public static BigDecimal getBuyFactor(BtcContants.CoinTypes coinType) {
-		return buy_factor.get(coinType.getCode());
+		return buy_factor.get(coinType);
 	}
 
 	/**
@@ -93,7 +99,7 @@ public class BtcContextManager {
 	 * @return
 	 */
 	public static int getMaxBuyOrder(CoinTypes coinType) {
-		return max_buy_order.get(coinType.getCode());
+		return max_buy_order.get(coinType);
 	}
 
 }
