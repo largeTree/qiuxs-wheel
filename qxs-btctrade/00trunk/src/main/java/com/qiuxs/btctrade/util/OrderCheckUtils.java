@@ -28,7 +28,7 @@ public class OrderCheckUtils {
 	 * @return
 	 */
 	public static boolean checkBuyOrderMinNum(BuyOrder order) {
-		return buy_order_min_num.get(order.getTypeEnum()).compareTo(order.getNum()) < 0;
+		return buy_order_min_num.get(order.getCoinType()).compareTo(order.getNum()) < 0;
 	}
 
 	/**

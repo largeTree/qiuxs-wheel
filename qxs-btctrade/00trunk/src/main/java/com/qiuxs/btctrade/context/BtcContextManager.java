@@ -1,14 +1,17 @@
 package com.qiuxs.btctrade.context;
 
 import java.math.BigDecimal;
+import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.locks.ReadWriteLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import org.jboss.netty.util.internal.ConcurrentHashMap;
 
 import com.qiuxs.btctrade.constants.BtcContants;
-import com.qiuxs.btctrade.constants.BtcContants.CoinTypes;
 import com.qiuxs.btctrade.context.dto.AccountState;
 import com.qiuxs.btctrade.util.CallApiUtils;
+import com.qiuxs.fdn.exception.utils.Exceptions;
 import com.qiuxs.fdn.uconfig.UConfigUtils;
 
 /**
@@ -29,7 +32,22 @@ public class BtcContextManager {
 	private static Map<BtcContants.CoinTypes, BigDecimal> buy_factor = new ConcurrentHashMap<BtcContants.CoinTypes, BigDecimal>();
 	static {
 		// 初始化各币种买入价因子
-		buy_factor.put(BtcContants.CoinTypes.doge, BigDecimal.valueOf(1.2D));
+		buy_factor.put(BtcContants.CoinTypes.doge, BigDecimal.valueOf(0.1D));
+	}
+
+	/** 买入因子调整比例 */
+	private static Map<BtcContants.CoinTypes, BigDecimal> buy_factor_adjust_rate = new ConcurrentHashMap<BtcContants.CoinTypes, BigDecimal>();
+	static {
+		// 初始化各币种买入价因子调整比例
+		buy_factor_adjust_rate.put(BtcContants.CoinTypes.doge, BigDecimal.valueOf(0.1));
+	}
+
+	/** 买入因子调整读写锁 */
+	private static Map<BtcContants.CoinTypes, ReadWriteLock> buy_factor_adjust_locks = new HashMap<BtcContants.CoinTypes, ReadWriteLock>();
+	static {
+		for (BtcContants.CoinTypes coinType : BtcContants.CoinTypes.values()) {
+			buy_factor_adjust_locks.put(coinType, new ReentrantReadWriteLock());
+		}
 	}
 
 	/** 买单最大数量 */
@@ -86,11 +104,57 @@ public class BtcContextManager {
 
 	/**
 	 * 获取购买因子
-	 * 当价格跌至 卖一价*因子时进行买入操作
+	 * 当价格跌至  最低价 * (1 + 买入因子) 时进行买入
 	 * @return
 	 */
 	public static BigDecimal getBuyFactor(BtcContants.CoinTypes coinType) {
-		return buy_factor.get(coinType);
+		ReadWriteLock lock = buy_factor_adjust_locks.get(coinType);
+		try {
+			lock.readLock().lock();
+			return buy_factor.get(coinType);
+		} catch (Exception e) {
+			throw Exceptions.unchecked(e);
+		} finally {
+			lock.readLock().unlock();
+		}
+	}
+
+	/**
+	 * 降低买入因子
+	 * 每当买入一次，降低一次
+	 * @param coinType
+	 */
+	public static void reduceBuyFactor(BtcContants.CoinTypes coinType) {
+		ReadWriteLock lock = buy_factor_adjust_locks.get(coinType);
+		try {
+			lock.writeLock().lock();
+			BigDecimal factory = buy_factor.get(coinType);
+			// 新的因子为  原因子 * (1 - 调正比例)
+			buy_factor.put(coinType, factory.multiply(BigDecimal.ONE.subtract(buy_factor_adjust_rate.get(coinType))));
+		} catch (Exception e) {
+			throw Exceptions.unchecked(e);
+		} finally {
+			lock.writeLock().unlock();
+		}
+	}
+
+	/**
+	 * 提高买入因子
+	 * 每当卖出一次，提高一次
+	 * @param coinType
+	 */
+	public static void increaseBuyFactor(BtcContants.CoinTypes coinType) {
+		ReadWriteLock lock = buy_factor_adjust_locks.get(coinType);
+		try {
+			lock.writeLock().lock();
+			BigDecimal factory = buy_factor.get(coinType);
+			// 新的因子为  原因子 / (1 - 调正比例)
+			buy_factor.put(coinType, factory.divide(BigDecimal.ONE.subtract(buy_factor_adjust_rate.get(coinType))));
+		} catch (Exception e) {
+			throw Exceptions.unchecked(e);
+		} finally {
+			lock.writeLock().unlock();
+		}
 	}
 
 	/**
@@ -98,7 +162,7 @@ public class BtcContextManager {
 	 * @param doge
 	 * @return
 	 */
-	public static int getMaxBuyOrder(CoinTypes coinType) {
+	public static int getMaxBuyOrder(BtcContants.CoinTypes coinType) {
 		return max_buy_order.get(coinType);
 	}
 

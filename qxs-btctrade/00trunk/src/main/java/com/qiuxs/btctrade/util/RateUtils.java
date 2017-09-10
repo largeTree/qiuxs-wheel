@@ -18,16 +18,16 @@ public class RateUtils {
 	private static final Map<String, BigDecimal> btc_fee_rate = new HashMap<String, BigDecimal>();
 	static {
 		// 初始化各币种费率
-		btc_fee_rate.put(BtcContants.CoinTypes.doge.toString(), BigDecimal.valueOf(0.001));
+		btc_fee_rate.put(BtcContants.CoinTypes.doge.toString(), BigDecimal.valueOf(0.002D));
 	}
 
-	/** 最低价个增长率
+	/** 最低价格增长率
 	 *  当前价 > 最低销售价 * (1 + 增长率) 时卖出
 	 *  */
 	private static final Map<String, BigDecimal> my_sale_price_add_rate = new HashMap<String, BigDecimal>();
 	static {
 		// 狗狗币增长率超过百分之5时卖出
-		my_sale_price_add_rate.put(BtcContants.CoinTypes.doge.toString(), BigDecimal.valueOf(0.05D));
+		my_sale_price_add_rate.put(BtcContants.CoinTypes.doge.toString(), BigDecimal.valueOf(0.01D));
 	}
 
 	/**

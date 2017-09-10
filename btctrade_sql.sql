@@ -37,6 +37,7 @@ CREATE TABLE `btc_sale_order` (
 	`num` DECIMAL(20,10) NOT NULL COMMENT'数量',
 	`money` DECIMAL(20,10) NOT NULL COMMENT'总价',
 	`btc_fee` DECIMAL(20,10) NOT NULL COMMENT'手续费',
+	`profit` DECIMAL(20,10) NOT NULL COMMENT'卖出收益',
 	`flag` TINYINT(2) NOT NULL COMMENT'单据状态',
 	`createdDate` DATETIME NOT NULL COMMENT'创建时间',
 	`finishDate` DATETIME NULL COMMENT'完成时间',
@@ -46,3 +47,5 @@ CREATE TABLE `btc_sale_order` (
 SELECT * FROM btc_market;
 
 SELECT * FROM btc_buy_order;
+
+SELECT * FROM btc_buy_order WHERE sale_price <= #{salePrice} and flag = 2

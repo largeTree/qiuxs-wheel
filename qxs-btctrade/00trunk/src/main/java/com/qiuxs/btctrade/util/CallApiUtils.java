@@ -8,6 +8,7 @@ import com.qiuxs.btctrade.constants.BtcContants;
 import com.qiuxs.btctrade.context.BtcContextManager;
 import com.qiuxs.btctrade.context.dto.AccountState;
 import com.qiuxs.btctrade.order.entity.BuyOrder;
+import com.qiuxs.btctrade.order.entity.SaleOrder;
 import com.qiuxs.fdn.Constant;
 import com.qiuxs.fdn.utils.net.HttpClientUtil;
 import com.qiuxs.fdn.utils.security.MD5Util;
@@ -18,22 +19,31 @@ public class CallApiUtils {
 	/**
 	 * 挂买单
 	 *  并将买单ID设置进买单对象
-	 * @param coinType
-	 * 	币种
-	 * @param amount
-	 * 	数量
-	 * @param price
-	 *  单价
+	 * @param order 
+	 * 	买单
 	 * @return
 	 */
 	public static String saveBuyOrder(BuyOrder order) {
 		StringBuilder params = new StringBuilder();
-		//		.append("key=").append(BtcContextManager.getPublicKey())
-
-		params.append("coin=").append(BtcContants.CoinTypes.valueOf(order.getType()).toString().toLowerCase())
+		params.append("coin=").append(order.getCoinType().toString())
 				.append("&amount=").append(order.getNum())
 				.append("&price=").append(order.getPrice());
 		JSONObject res = callPrivateApi(BtcContants.Apis.BUY, params.toString());
+		order.setBtcOrderId(res.getString("id"));
+		return order.getBtcOrderId();
+	}
+
+	/**
+	 * 挂卖单
+	 * @param order
+	 * @return
+	 */
+	public static String saveSaleOrder(SaleOrder order) {
+		StringBuilder params = new StringBuilder();
+		params.append("coin=").append(order.getCoinType().toString())
+				.append("&amount=").append(order.getNum())
+				.append("&price=").append(order.getPrice());
+		JSONObject res = callPrivateApi(BtcContants.Apis.SALE, params.toString());
 		order.setBtcOrderId(res.getString("id"));
 		return order.getBtcOrderId();
 	}

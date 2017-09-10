@@ -1,12 +1,12 @@
 /*
- * 文件名称: BuyOrder.java
+ * 文件名称: SaleOrder.java
  * 版权信息: Copyright 2001-2017 hangzhou ecool technology Co., LTD. All right reserved.
  * ----------------------------------------------------------------------------------------------
  * 修改历史:
  * ----------------------------------------------------------------------------------------------
  * 修改原因: 新增
  * 修改人员: qiuxs
- * 修改日期: 2017-9-6
+ * 修改日期: 2017-9-9
  * 修改内容: 
  */
 package com.qiuxs.btctrade.order.entity;
@@ -15,26 +15,27 @@ import com.qiuxs.btctrade.constants.BtcContants;
 import com.qiuxs.btctrade.util.ICoinTypeable;
 import com.qiuxs.fdn.entity.EcEntity;
 
+import java.math.BigDecimal;
 import java.util.Date;
 
 /**
- * 买单表对象类
- * @author qiuxs created on 2017-9-6
+ * 卖单表对象类
+ * @author qiuxs created on 2017-9-9
  * @since
  */
-public class BuyOrder extends EcEntity<Long> implements ICoinTypeable{
+public class SaleOrder extends EcEntity<Long> implements ICoinTypeable {
 	private static final long serialVersionUID = 1L;
 
-	/**  虚拟币类型 */
+	/** 币种 */
 	private Integer type;
 
-	/** Btc挂单ID */
+	/** 卖单ID */
 	private String btcOrderId;
 
-	/** 买入价格 */
+	/** 卖价 */
 	private java.math.BigDecimal price;
 
-	/** 买入数量 */
+	/** 卖出数量 */
 	private java.math.BigDecimal num;
 
 	/** 总价 */
@@ -43,16 +44,16 @@ public class BuyOrder extends EcEntity<Long> implements ICoinTypeable{
 	/** 手续费 */
 	private java.math.BigDecimal btcFee;
 
-	/** 预期销售价 */
-	private java.math.BigDecimal salePrice;
+	/** 收益 */
+	private java.math.BigDecimal profit;
 
-	/** 单据状态 */
+	/** 状态 */
 	private Integer flag;
 
 	/** 完成时间 */
 	private Date finishDate;
 
-	/** 取消时间 */
+	/** 撤销时间 */
 	private Date cancelDate;
 
 	public Integer getType() {
@@ -103,12 +104,12 @@ public class BuyOrder extends EcEntity<Long> implements ICoinTypeable{
 		this.btcFee = btcFee;
 	}
 
-	public java.math.BigDecimal getSalePrice() {
-		return salePrice;
+	public java.math.BigDecimal getProfit() {
+		return profit;
 	}
 
-	public void setSalePrice(java.math.BigDecimal salePrice) {
-		this.salePrice = salePrice;
+	public void setProfit(java.math.BigDecimal profit) {
+		this.profit = profit;
 	}
 
 	public Integer getFlag() {
@@ -138,6 +139,16 @@ public class BuyOrder extends EcEntity<Long> implements ICoinTypeable{
 	@Override
 	public BtcContants.CoinTypes getCoinType() {
 		return BtcContants.CoinTypes.valueOf(this.getType());
+	}
+
+	/**
+	 * 计算收益
+	 * 卖总价 - (卖手续费 + 买总价 + 买手续费)
+	 * @param buyOrder
+	 */
+	public void calculateProfit(BuyOrder buyOrder) {
+		BigDecimal profit = this.money.subtract(this.btcFee.add(buyOrder.getMoney()).add(buyOrder.getBtcFee()));
+		this.setProfit(profit);
 	}
 
 }

@@ -46,6 +46,7 @@ public abstract class BaseCoinMarketFetchWorker<Svc extends AbstractDataAccessSe
 	@Scheduled(fixedDelay = 1000, initialDelay = 5000)
 	public final void work() {
 		JSONObject data = HttpClientUtil.getRetJson(this.api);
+		System.out.println(data);
 		BtcMarket market = JsonUtils.fromJson(data.toJSONString(), BtcMarket.class);
 		market.setType(coinType.getValue());
 		callSave(market);

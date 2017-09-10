@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper namespace="com.qiuxs.btctrade.order.dao.BuyOrderDao"><!--dsName="" saasAspect="" -->
+<mapper namespace="com.qiuxs.btctrade.order.dao.SaleOrderDao"><!--dsName="" saasAspect=""-->
 	<!-- <cache readOnly="true"/> -->
 	<!-- 启用Redis缓存时去除下方注释 -->
 	<!-- <cache eviction="LRU" type="com.qiuxs.tech.mybatis.cache.MybatisRedisCache" readOnly="true" /> -->
-	<sql id="allFields">
+    <sql id="allFields">
 		`id`,
 		`type`,
 		`btc_order_id` as btcOrderId,
@@ -12,13 +12,13 @@
 		`num`,
 		`money`,
 		`btc_fee` as btcFee,
-		`sale_price` as salePrice,
+		`profit`,
 		`flag`,
 		`createdDate`,
 		`finishDate`,
 		`cancelDate`
-	</sql>
-
+    </sql>
+    
 	<sql id="insertFields">
 		`id`,
 		`type`,
@@ -27,133 +27,124 @@
 		`num`,
 		`money`,
 		`btc_fee`,
-		`sale_price`,
+		`profit`,
 		`flag`,
 		`createdDate`,
 		`finishDate`,
 		`cancelDate`
-	</sql>
-
-	<insert id="create" parameterType="com.qiuxs.btctrade.order.entity.BuyOrder">
-		insert into btc_buy_order (
-		<include refid="insertFields" />
-		)
+    </sql>
+	
+	<insert id="create" parameterType="com.qiuxs.btctrade.order.entity.SaleOrder">
+		insert into btc_sale_order (<include refid="insertFields"/>)
 		values (
-		#{id},
-		#{type},
-		#{btcOrderId},
-		#{price},
-		#{num},
-		#{money},
-		#{btcFee},
-		#{salePrice},
-		#{flag},
-		#{createdDate},
-		#{finishDate},
-		#{cancelDate}
+			#{id},
+			#{type},
+			#{btcOrderId},
+			#{price},
+			#{num},
+			#{money},
+			#{btcFee},
+			#{profit},
+			#{flag},
+			#{createdDate},
+			#{finishDate},
+			#{cancelDate}
 		)
 	</insert>
-
-	<insert id="createInBatch" parameterType="com.qiuxs.btctrade.order.entity.BuyOrder">
-		insert into btc_buy_order (
-		<include refid="insertFields" />
-		) values
+	
+	<insert id="createInBatch" parameterType="com.qiuxs.btctrade.order.entity.SaleOrder">
+		insert into btc_sale_order (<include refid="insertFields"/>) values 
 		<foreach collection="list" item="item" index="index" separator=",">
 			(
-			#{item.id},
-			#{item.type},
-			#{item.btcOrderId},
-			#{item.price},
-			#{item.num},
-			#{item.money},
-			#{item.btcFee},
-			#{item.salePrice},
-			#{item.flag},
-			#{item.createdDate},
-			#{item.finishDate},
-			#{item.cancelDate}
+				#{item.id},
+				#{item.type},
+				#{item.btcOrderId},
+				#{item.price},
+				#{item.num},
+				#{item.money},
+				#{item.btcFee},
+				#{item.profit},
+				#{item.flag},
+				#{item.createdDate},
+				#{item.finishDate},
+				#{item.cancelDate}
 			)
 		</foreach>
-	</insert>
-
-	<sql id="whereClause">
+	</insert>   		
+	
+    <sql id="whereClause">
 		<if test="type != null">
-			and `type` = #{type}
+			and `type` = #{type}			
 		</if>
 		<if test='btcOrderId != null and btcOrderId != ""'>
-			and `btc_order_id` = #{btcOrderId}
+			and `btc_order_id` = #{btcOrderId}			
 		</if>
 		<if test="price != null">
-			and `price` = #{price}
+			and `price` = #{price}			
 		</if>
 		<if test="num != null">
-			and `num` = #{num}
+			and `num` = #{num}			
 		</if>
 		<if test="money != null">
-			and `money` = #{money}
+			and `money` = #{money}			
 		</if>
 		<if test="btcFee != null">
-			and `btc_fee` = #{btcFee}
+			and `btc_fee` = #{btcFee}			
 		</if>
-		<if test="salePrice != null">
-			and `sale_price` = #{salePrice}
+		<if test="profit != null">
+			and `profit` = #{profit}			
 		</if>
 		<if test="flag != null">
-			and `flag` = #{flag}
+			and `flag` = #{flag}			
 		</if>
 		<if test="createdDate != null">
 			and `createdDate` &gt;= #{createdDate}
 			<!--and `createdDate` &lt;= #{createdDate_fan1} -->
 		</if>
 		<if test="finishDate != null">
-			and `finishDate` = #{finishDate}
+			and `finishDate` = #{finishDate}			
 		</if>
 		<if test="cancelDate != null">
-			and `cancelDate` = #{cancelDate}
+			and `cancelDate` = #{cancelDate}			
 		</if>
 	</sql>
-
-	<select id="get" resultType="com.qiuxs.btctrade.order.entity.BuyOrder" parameterType="Long">
-		select
-		<include refid="allFields" />
-		from btc_buy_order
-		where id = #{id}
+    
+	<select id="get" resultType="com.qiuxs.btctrade.order.entity.SaleOrder" parameterType="Long" >
+		select <include refid="allFields"/> 
+		  from btc_sale_order 
+		 where id = #{id} 
 	</select>
-
-	<select id="getByIds" parameterType="List" resultType="com.qiuxs.btctrade.order.entity.BuyOrder">
-		select
-		<include refid="allFields" />
-		from btc_buy_order
+	
+	<select id="getByIds" parameterType="List" resultType="com.qiuxs.btctrade.order.entity.SaleOrder">
+		select <include refid="allFields"/> from btc_sale_order 
 		where id in
 		<foreach collection="list" item="item" open="(" close=")" separator=",">
 			#{item}
 		</foreach>
 	</select>
-
-	<select id="getAll" resultType="com.qiuxs.btctrade.order.entity.BuyOrder">
-		select
-		<include refid="allFields" />
-		from btc_buy_order
+		
+	<select id="getAll" resultType="com.qiuxs.btctrade.order.entity.SaleOrder">
+		select <include refid="allFields"/> 
+		from btc_sale_order 
 	</select>
 
 	<select id="count" resultType="long">
-		select count(*) from btc_buy_order
+		select count(*) from btc_sale_order 
 	</select>
-
+	
 	<select id="getCountByWhere" parameterType="Map" resultType="Long">
-		select count(*) from btc_buy_order
+		select count(*) from btc_sale_order 
 		<where>
-			<include refid="whereClause" />
+		    <include refid="whereClause"/>
 		</where>
 	</select>
 
-	<select id="findByWhere" parameterType="Map" resultType="com.qiuxs.btctrade.order.entity.BuyOrder">
-		select
-		<include refid="allFields" />
-		from btc_buy_order
+	<select id="findByWhere" parameterType="Map" resultType="com.qiuxs.btctrade.order.entity.SaleOrder">
+		select <include refid="allFields"/>
+		from btc_sale_order 
 		<where>
-			<include refid="whereClause" />
-		</where>
+		    <include refid="whereClause"/>
+		</where>				
 		<if test="orderBy != null">
 			ORDER BY ${orderBy}
 			<if test="orderByDesc != null and orderByDesc == 'true'">
@@ -161,8 +152,8 @@
 			</if>
 		</if>
 	</select>
-
-	<sql id="setComn">
+	
+	<sql id="setComn">		
 		<if test="type != null">
 			`type` = #{type},
 		</if>
@@ -181,8 +172,8 @@
 		<if test="btcFee != null">
 			`btc_fee` = #{btcFee},
 		</if>
-		<if test="salePrice != null">
-			`sale_price` = #{salePrice},
+		<if test="profit != null">
+			`profit` = #{profit},
 		</if>
 		<if test="flag != null">
 			`flag` = #{flag},
@@ -195,65 +186,57 @@
 				<when test="finishDate.getTime() == 0">
 					`finishDate` = null,
 				</when>
-				<otherwise>
+		    	<otherwise>
 					`finishDate` = #{finishDate},
-				</otherwise>
-			</choose>
-		</if>
+		    	</otherwise>
+	    	</choose>
+    	</if>
 		<if test="cancelDate != null">
 			<choose>
 				<when test="cancelDate.getTime() == 0">
 					`cancelDate` = null
 				</when>
-				<otherwise>
+		    	<otherwise>
 					`cancelDate` = #{cancelDate}
-				</otherwise>
-			</choose>
-		</if>
+		    	</otherwise>
+	    	</choose>
+    	</if>
 	</sql>
-
-	<update id="update" parameterType="com.qiuxs.btctrade.order.entity.BuyOrder">
-		update btc_buy_order
-		<set>
-			<include refid="setComn" />
-		</set>
-		where id = #{id}
+	
+	<update id="update" parameterType="com.qiuxs.btctrade.order.entity.SaleOrder">
+		 update btc_sale_order 
+		    <set>
+		    	<include refid="setComn"/>
+			</set>
+		  where id = #{id}
 	</update>
-
+	
 	<update id="updateByMap" parameterType="Map">
-		update btc_buy_order
-		<set>
-			<include refid="setComn" />
-		</set>
-		where id = #{id}
+		 update btc_sale_order 
+		    <set>
+		    	<include refid="setComn"/>
+			</set>
+		  where id = #{id}
 	</update>
-
-
+	
+	
 	<delete id="delete">
-		delete from btc_buy_order where id = #{id}
+		delete from btc_sale_order where id = #{id}
 	</delete>
-
+	
 	<delete id="multiDelete" parameterType="List">
-		delete from btc_buy_order
+		delete from btc_sale_order
 		where id in
 		<foreach collection="list" item="item" open="(" close=")" separator=",">
 			#{item}
 		</foreach>
 	</delete>
-
+	
 	<delete id="deleteByWhere" parameterType="Map">
-		delete from btc_buy_order
+		delete from btc_sale_order 
 		<where>
-			<include refid="whereClause" />
+		    <include refid="whereClause"/>
 		</where>
-	</delete>
-
-	<!-- 获取可以卖出的买单 -->
-	<select id="findCanSaleOrders" resultType="com.qiuxs.btctrade.order.entity.BuyOrder" parameterType="com.qiuxs.btctrade.market.entity.BtcMarket">
-		SELECT * FROM btc_buy_order
-		WHERE sale_price &lt;= #{buy}
-		and flag = 2
-		and `type` = #{type}
-	</select>
-
+	</delete>	
+	
 </mapper>    

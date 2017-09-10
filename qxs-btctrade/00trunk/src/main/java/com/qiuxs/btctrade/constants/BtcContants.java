@@ -51,7 +51,9 @@ public class BtcContants {
 		/** 已取消 */
 		cancelled(1),
 		/** 已完成 */
-		closed(2);
+		closed(2),
+		/** 已卖出 */
+		saled(3);
 
 		private int value;
 
@@ -71,9 +73,15 @@ public class BtcContants {
 	 *
 	 */
 	public static class Apis {
+		/** 获取单据状态 */
 		public static final String FETCH_ORDER = "https://api.btctrade.com/api/fetch_order/";
+		/** 挂买单 */
 		public static final String BUY = "https://api.btctrade.com/api/buy/";
+		/** 买卖单 */
+		public static final String SALE = "https://api.btctrade.com/api/sell/";
+		/** 狗币行情 */
 		public static final String DOGE_MARKET = "https://api.btctrade.com/api/ticker?coin=doge";
+		/** 帐号详情 */
 		public static final String ACCOUNT_INFO = "https://api.btctrade.com/api/balance/";
 	}
 
