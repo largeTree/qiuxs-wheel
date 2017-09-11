@@ -250,7 +250,9 @@
 
 	<!-- 获取可以卖出的买单 -->
 	<select id="findCanSaleOrders" resultType="com.qiuxs.btctrade.order.entity.BuyOrder" parameterType="com.qiuxs.btctrade.market.entity.BtcMarket">
-		SELECT * FROM btc_buy_order
+		SELECT 
+			<include refid="allFields" />
+		FROM btc_buy_order
 		WHERE sale_price &lt;= #{buy}
 		and flag = 2
 		and `type` = #{type}

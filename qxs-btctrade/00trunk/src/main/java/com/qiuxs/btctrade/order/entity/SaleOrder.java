@@ -143,11 +143,12 @@ public class SaleOrder extends EcEntity<Long> implements ICoinTypeable {
 
 	/**
 	 * 计算收益
-	 * 卖总价 - (卖手续费 + 买总价 + 买手续费)
+	 * 卖总价 - (卖手续费 + 买总价 + 买手续费)   四舍五入取整
 	 * @param buyOrder
 	 */
 	public void calculateProfit(BuyOrder buyOrder) {
 		BigDecimal profit = this.money.subtract(this.btcFee.add(buyOrder.getMoney()).add(buyOrder.getBtcFee()));
+		profit.setScale(5, BigDecimal.ROUND_HALF_UP);
 		this.setProfit(profit);
 	}
 

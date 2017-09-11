@@ -5,6 +5,7 @@ import java.util.List;
 
 import javax.annotation.Resource;
 
+import org.apache.log4j.Logger;
 import org.springframework.stereotype.Service;
 
 import com.qiuxs.btctrade.constants.BtcContants;
@@ -27,6 +28,8 @@ import com.qiuxs.btctrade.util.RateUtils;
  */
 @Service
 public class DogeMarketObserver implements IMarketObserver {
+
+	private static Logger log = Logger.getLogger(DogeMarketObserver.class);
 
 	@Resource
 	private BuyOrderService buyOrderService;
@@ -110,8 +113,6 @@ public class DogeMarketObserver implements IMarketObserver {
 	 */
 	private void doSale(BuyOrder order) {
 		try {
-			// 降低购买难度
-			BtcContextManager.increaseBuyFactor(order.getCoinType());
 			SaleOrder saleOrder = new SaleOrder();
 			saleOrder.setType(this.market.getType());
 			saleOrder.setPrice(this.market.getBuy());
@@ -129,9 +130,11 @@ public class DogeMarketObserver implements IMarketObserver {
 			// 加入缓存
 			OrderCacheHolder.addSaleOrder(saleOrder);
 			this.saleOrderService.create(saleOrder);
+			// 降低购买难度
+			BtcContextManager.increaseBuyFactor(order.getCoinType());
+			OrderCacheHolder.getAndDecrement(order.getCoinType());
 		} catch (Exception e) {
-			// 加大购买难度
-			BtcContextManager.reduceBuyFactor(order.getCoinType());
+			log.error("ext=" + e.getLocalizedMessage(), e);
 		}
 	}
 
@@ -151,12 +154,12 @@ public class DogeMarketObserver implements IMarketObserver {
 	 * @return
 	 */
 	private boolean canBuy() {
-		BigDecimal targetPrice = this.market.getLow().multiply(BigDecimal.ONE.add(BtcContextManager.getBuyFactor(BtcContants.CoinTypes.doge))).setScale(5, BigDecimal.ROUND_HALF_UP);;
+		BigDecimal targetPrice = this.market.getLow().multiply(BigDecimal.ONE.add(BtcContextManager.getBuyFactor(BtcContants.CoinTypes.doge)))
+				.setScale(5, BigDecimal.ROUND_HALF_UP);
 		System.out.println("目标买价  ------>>> " + targetPrice + "\n卖一价      ------>>> " + this.market.getSell());
 		// 当前缓存的买单数量小于最大买单数量，卖一价小于（最低价*(1 + 买入因子)）时买入
 		if (OrderCacheHolder.getBuyOrderCount(BtcContants.CoinTypes.doge) < BtcContextManager.getMaxBuyOrder(BtcContants.CoinTypes.doge)
 				&& this.market.getSell().compareTo(targetPrice) < 1) {
-			System.out.println("created buy order");
 			return true;
 		}
 		return false;

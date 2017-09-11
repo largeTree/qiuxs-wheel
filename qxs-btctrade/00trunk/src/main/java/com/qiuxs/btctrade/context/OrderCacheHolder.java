@@ -5,6 +5,7 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
@@ -51,6 +52,15 @@ public class OrderCacheHolder {
 	}
 
 	/**
+	 * 指定单据数量减少1
+	 * @param coinType
+	 * @return
+	 */
+	public static int getAndDecrement(BtcContants.CoinTypes coinType) {
+		return BuyOrderHolder.getAndDecrement(coinType);
+	}
+
+	/**
 	 * 添加一个买单
 	 * @param order
 	 */
@@ -75,15 +85,6 @@ public class OrderCacheHolder {
 	public static List<SaleOrder> getSaleOrders(BtcContants.CoinTypes coinType) {
 		return SaleOrderHolder.getSaleOrders(coinType);
 	}
-
-	//	/**
-	//	 * 获取卖单缓存数量
-	//	 * @param coinType
-	//	 * @return
-	//	 */
-	//	public static int getSaleOrderCount(BtcContants.CoinTypes coinType) {
-	//		return SaleOrderHolder.getSaleOrderCount(coinType);
-	//	}
 
 	/**
 	 * 添加一个卖单
@@ -118,6 +119,9 @@ public class OrderCacheHolder {
 			}
 		}
 
+		/** 各币种的买单数量 */
+		private static Map<BtcContants.CoinTypes, AtomicInteger> buy_order_count = new HashMap<BtcContants.CoinTypes, AtomicInteger>();
+
 		/**
 		 * 初始化缓存  
 		 * 加载数据库中处于开放状态的单据
@@ -130,6 +134,37 @@ public class OrderCacheHolder {
 				BuyOrder order = iter.next();
 				BuyOrderHolder.addOrder(order);
 			}
+
+			for (BtcContants.CoinTypes coinType : BtcContants.CoinTypes.values()) {
+				// 初始化当前买进因子，减少初始因子（已买但未卖出单据数量）次 
+				Long countL = buyOrderService.getCountByWhere(MapUtils.genMap("flag", BtcContants.BuyOrderFlag.closed.getValue(), "type", coinType.getValue()));
+				int countI = countL == null ? 0 : countL.intValue();
+				// 设置当前币种已存在切未卖出的单据数量
+				buy_order_count.put(coinType, new AtomicInteger(countI));
+				if (countI == 0) {
+					continue;
+				}
+				for (int i = 0; i < countI; i++) {
+					BtcContextManager.reduceBuyFactor(coinType);
+				}
+			}
+		}
+
+		/**
+		 * 指定单据数量增加1
+		 * @param coinType
+		 */
+		private static int getAndIncrement(BtcContants.CoinTypes coinType) {
+			return buy_order_count.get(coinType).incrementAndGet();
+		}
+
+		/**
+		 * 指定单据数量减少1
+		 * @param coinType
+		 * @return
+		 */
+		private static int getAndDecrement(BtcContants.CoinTypes coinType) {
+			return buy_order_count.get(coinType).decrementAndGet();
 		}
 
 		/**
@@ -142,6 +177,7 @@ public class OrderCacheHolder {
 		private static void addOrder(BuyOrder order) {
 			getBuyWriteLock(order.getCoinType()).lock();
 			getBuyOrdersWithoutLock(order.getCoinType()).add(order);
+			getAndIncrement(order.getCoinType());
 			getBuyWriteLock(order.getCoinType()).unlock();
 		}
 
@@ -175,7 +211,7 @@ public class OrderCacheHolder {
 		}
 
 		/**
-		 * 获取指定币种买单数量
+		 * 获取指定币种已买但未卖出数量
 		 * @param coinType
 		 * @return
 		 */
@@ -183,6 +219,8 @@ public class OrderCacheHolder {
 			getBuyReadLock(coinType).lock();
 			LinkedList<BuyOrder> buyOrders = getBuyOrdersWithoutLock(coinType);
 			int count = buyOrders.size();
+			// 已卖但为买出数量   = 已买未成交 + 已买且已成交
+			count += buy_order_count.get(coinType).get();
 			getBuyReadLock(coinType).unlock();
 			return count;
 		}
@@ -195,6 +233,7 @@ public class OrderCacheHolder {
 		private static void removeBuyOrder(BtcContants.CoinTypes coinType, List<BuyOrder> removeList) {
 			getBuyWriteLock(coinType).lock();
 			getBuyOrdersWithoutLock(coinType).removeAll(removeList);
+			buy_order_count.get(coinType).set(buy_order_count.get(coinType).get() - removeList.size());
 			getBuyWriteLock(coinType).unlock();
 		}
 
