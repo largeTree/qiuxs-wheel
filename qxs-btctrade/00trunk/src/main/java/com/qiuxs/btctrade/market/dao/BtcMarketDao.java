@@ -10,6 +10,9 @@
  * 修改内容: 
  */
 package com.qiuxs.btctrade.market.dao;
+
+import java.math.BigDecimal;
+
 import com.qiuxs.frm.dao.IParentDAO;
 import com.qiuxs.frm.dao.MyBatisRepository;
 import com.qiuxs.btctrade.market.entity.BtcMarket;
@@ -20,7 +23,13 @@ import com.qiuxs.btctrade.market.entity.BtcMarket;
  * @author qiuxs created on 2017-9-5
  * @since 
  */
- @MyBatisRepository
+@MyBatisRepository
 public interface BtcMarketDao extends IParentDAO<Long, BtcMarket> {
+
+	/**
+	 * 获取平均卖价
+	 * @return
+	 */
+	public BigDecimal calSellAvg();
 
 }
