@@ -1,4 +1,4 @@
-package qiuxs.utils.upyun;
+package com.qiuxs.utils.excel;
 
 import junit.framework.Test;
 import junit.framework.TestCase;
