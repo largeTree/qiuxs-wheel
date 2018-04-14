@@ -1,0 +1,6 @@
+{
+	"port":80,
+	"webappDir":"./webapps",
+	"shutdownPort":"81",
+	"welcomeFile":"index.html"
+}
