@@ -57,6 +57,9 @@ public class EntryServlet extends HttpServlet {
 		Map<String, String> headers = new HashMap<>();
 		while (names.hasMoreElements()) {
 			String key = names.nextElement();
+			if ("Content-Length".equals(key)) {
+				continue;
+			}
 			headers.put(key, req.getHeader(key));
 		}
 		System.out.println("headers:" + headers.toString());
