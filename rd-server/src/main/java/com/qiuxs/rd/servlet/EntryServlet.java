@@ -39,6 +39,10 @@ public class EntryServlet extends HttpServlet {
 	protected void service(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
 		System.out.println("----------------------  start  --------------------------");
 
+		// requestURI
+		String requestURI = req.getRequestURI();
+		System.out.println(requestURI);
+
 		// 请求方法
 		String method = req.getMethod();
 		System.out.println("requestMethod:" + method);
@@ -72,13 +76,16 @@ public class EntryServlet extends HttpServlet {
 
 	private void sendProxy(String method, Map<String, String> params, Map<String, String> headers,
 			HttpServletResponse response) {
-		if ("post".equals(method.toLowerCase())) {
+		if ("post".equalsIgnoreCase(method.toLowerCase())) {
 			HttpPost post = new HttpPost(TOURL);
 			setHeader(headers, post);
 			List<NameValuePair> nvps = new ArrayList<>();
 			for (Iterator<Map.Entry<String, String>> iter = params.entrySet().iterator(); iter.hasNext();) {
 				Map.Entry<String, String> entry = iter.next();
-				nvps.add(new BasicNameValuePair(entry.getKey(), entry.getValue()));
+				String key = entry.getKey();
+				String value = entry.getValue();
+				nvps.add(new BasicNameValuePair(key, value));
+				System.out.println("addParams:{" + key + ":" + value + "}");
 			}
 			try {
 				post.setEntity(new UrlEncodedFormEntity(nvps, "utf-8"));
@@ -89,7 +96,7 @@ public class EntryServlet extends HttpServlet {
 			} finally {
 				post.completed();
 			}
-		} else if ("get".equals(method.toLowerCase())) {
+		} else if ("get".equalsIgnoreCase(method.toLowerCase())) {
 			StringBuilder queryString = new StringBuilder("?");
 			for (Iterator<Map.Entry<String, String>> iter = params.entrySet().iterator(); iter.hasNext();) {
 				Map.Entry<String, String> entry = iter.next();
