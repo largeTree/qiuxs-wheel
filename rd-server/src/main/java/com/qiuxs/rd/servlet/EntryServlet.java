@@ -29,29 +29,37 @@ public class EntryServlet extends HttpServlet {
 	protected void service(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
 		info("---------------------- Request start  --------------------------");
 		String contextPath = req.getServletContext().getContextPath();
-		System.out.println("contextPath : " + contextPath);
+		info("contextPath : " + contextPath);
 		// requestURI
 		String requestURI = req.getRequestURI();
 		requestURI = requestURI.substring(contextPath.length());
-		System.out.println("requestURI : " + requestURI);
+		info("requestURI : " + requestURI);
+
+		// queryString
+		String queryString = req.getQueryString();
+		info("queryString : " + queryString);
 
 		// 请求方法
 		String method = req.getMethod();
 		info("requestMethod : " + method);
 
 		if ("post".equalsIgnoreCase(method)) {
-			this.post(requestURI, req, resp);
+			this.post(requestURI, queryString, req, resp);
 		} else if ("get".equalsIgnoreCase(method)) {
-			this.get(requestURI, req, resp);
+			this.get(requestURI, queryString, req, resp);
 		}
 
 		info("---------------------- Request end  --------------------------\n\n");
 	}
 
-	private void get(String uri, HttpServletRequest req, HttpServletResponse resp) throws IOException {
+	private void get(String uri, String queryString, HttpServletRequest req, HttpServletResponse resp)
+			throws IOException {
+		String finalUrl = TOURL + uri;
+		if (queryString != null && queryString.length() > 0) {
+			finalUrl += ("?" + queryString);
+		}
 		// queryString
-		String queryString = req.getQueryString();
-		HttpURLConnection conn = this.openConnection(TOURL + uri + "?" + queryString);
+		HttpURLConnection conn = this.openConnection(finalUrl);
 		conn.setRequestMethod("GET");
 		// 请求头
 		this.copyReqHeaders(req, conn);
@@ -61,8 +69,13 @@ public class EntryServlet extends HttpServlet {
 		this.copyResponse(conn, resp);
 	}
 
-	private void post(String uri, HttpServletRequest req, HttpServletResponse resp) throws IOException {
-		HttpURLConnection conn = this.openConnection(TOURL + uri);
+	private void post(String uri, String queryString, HttpServletRequest req, HttpServletResponse resp)
+			throws IOException {
+		String finalUrl = TOURL + uri;
+		if (queryString != null && queryString.length() > 0) {
+			finalUrl += ("?" + queryString);
+		}
+		HttpURLConnection conn = this.openConnection(finalUrl);
 		conn.setRequestMethod("POST");
 
 		InputStream fromIn = null;
