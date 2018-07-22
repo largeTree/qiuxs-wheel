@@ -14,6 +14,11 @@
 
 	<name>rd-server</name>
 	<url>http://maven.apache.org</url>
+	
+	<description>
+		一个简单的反向代理服务器
+	</description>
+	
 	<dependencies>
 		<dependency>
 			<groupId>org.apache.httpcomponents</groupId>
