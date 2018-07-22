@@ -1,14 +1,16 @@
 package com.qiuxs.rd.servlet;
 
-import java.io.BufferedReader;
+import java.io.Closeable;
 import java.io.IOException;
-import java.io.InputStreamReader;
-import java.util.ArrayList;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.net.HttpURLConnection;
+import java.net.URL;
 import java.util.Enumeration;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
@@ -16,147 +18,142 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.apache.http.HttpResponse;
-import org.apache.http.NameValuePair;
-import org.apache.http.client.HttpClient;
-import org.apache.http.client.entity.UrlEncodedFormEntity;
-import org.apache.http.client.methods.HttpGet;
-import org.apache.http.client.methods.HttpPost;
-import org.apache.http.client.methods.HttpRequestBase;
-import org.apache.http.impl.client.HttpClientBuilder;
-import org.apache.http.message.BasicNameValuePair;
-
 @WebServlet(urlPatterns = { "/*" })
 public class EntryServlet extends HttpServlet {
 
 	private static final long serialVersionUID = -1098608417510917968L;
 
-	private static final String TOURL = "http://qiuxiangshi.wicp.net:8081/wx";
-
-	private HttpClient client = HttpClientBuilder.create().build();
+	private static final String TOURL = "http://qiuxiangshi.wicp.net:8081";
 
 	@Override
 	protected void service(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
 		info("---------------------- Request start  --------------------------");
-
+		String contextPath = req.getServletContext().getContextPath();
+		System.out.println("contextPath : " + contextPath);
 		// requestURI
 		String requestURI = req.getRequestURI();
-		System.out.println(requestURI);
+		requestURI = requestURI.substring(contextPath.length());
+		System.out.println("requestURI : " + requestURI);
 
 		// 请求方法
 		String method = req.getMethod();
-		info("requestMethod:" + method);
+		info("requestMethod : " + method);
 
-		// 请求参数
-		Enumeration<String> names = req.getParameterNames();
-		Map<String, String> params = new HashMap<>();
-		while (names.hasMoreElements()) {
-			String key = names.nextElement();
-			params.put(key, req.getParameter(key));
+		if ("post".equalsIgnoreCase(method)) {
+			this.post(requestURI, req, resp);
+		} else if ("get".equalsIgnoreCase(method)) {
+			this.get(requestURI, req, resp);
 		}
-		info("params:" + params.toString());
 
-		// 请求头
-		names = req.getHeaderNames();
-		Map<String, String> headers = new HashMap<>();
-		while (names.hasMoreElements()) {
-			String key = names.nextElement();
-			if ("Content-Length".equalsIgnoreCase(key)) {
-				continue;
-			}
-			headers.put(key, req.getHeader(key));
-		}
-		info("headers:" + headers.toString());
-		String remoteAddr = req.getRemoteAddr();
-		info("remoteAddr:" + remoteAddr);
-		// 发送代理
-		sendProxy(method, params, headers, resp);
 		info("---------------------- Request end  --------------------------\n\n");
 	}
 
-	private void sendProxy(String method, Map<String, String> params, Map<String, String> headers,
-			HttpServletResponse response) {
-		info("---------------------- sendProxy start  --------------------------");
-		if ("post".equalsIgnoreCase(method)) {
-			info("---------------------- doPost start  --------------------------");
-			HttpPost post = new HttpPost(TOURL);
-			setHeader(headers, post);
-			List<NameValuePair> nvps = new ArrayList<>();
-			info("addParams...");
-			for (Iterator<Map.Entry<String, String>> iter = params.entrySet().iterator(); iter.hasNext();) {
-				Map.Entry<String, String> entry = iter.next();
-				String key = entry.getKey();
-				String value = entry.getValue();
-				nvps.add(new BasicNameValuePair(key, value));
-				info("addOneParams:{" + key + ":" + value + "}");
-			}
-			try {
-				info("paramsSize:" + nvps.size());
-				post.setEntity(new UrlEncodedFormEntity(nvps, "utf-8"));
-				HttpResponse res = this.client.execute(post);
-				sendRes(response, res);
-			} catch (IOException e) {
-				e.printStackTrace();
-			} finally {
-				post.completed();
-			}
-			info("---------------------- doPost end  --------------------------");
-		} else if ("get".equalsIgnoreCase(method)) {
-			info("---------------------- doGet start  --------------------------");
-			StringBuilder queryString = new StringBuilder("?");
-			for (Iterator<Map.Entry<String, String>> iter = params.entrySet().iterator(); iter.hasNext();) {
-				Map.Entry<String, String> entry = iter.next();
-				queryString.append(entry.getKey()).append("=").append(entry.getValue());
-				if (iter.hasNext()) {
-					queryString.append("&");
-				}
-			}
-			info("queryString:" + queryString.toString());
-			HttpGet get = new HttpGet(TOURL + queryString.toString());
-			setHeader(headers, get);
-			try {
-				HttpResponse res = this.client.execute(get);
-				sendRes(response, res);
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
-			info("---------------------- doGet end  --------------------------");
-		}
-		info("---------------------- sendProxy end  --------------------------");
+	private void get(String uri, HttpServletRequest req, HttpServletResponse resp) throws IOException {
+		// queryString
+		String queryString = req.getQueryString();
+		HttpURLConnection conn = this.openConnection(TOURL + uri + "?" + queryString);
+		conn.setRequestMethod("GET");
+		// 请求头
+		this.copyReqHeaders(req, conn);
+		// 响应头
+		this.copyRespHeaders(conn, resp);
+		// 响应主题
+		this.copyResponse(conn, resp);
 	}
 
-	private void setHeader(Map<String, String> headers, HttpRequestBase req) {
-		info("sedHeaders...");
-		for (Iterator<Map.Entry<String, String>> iter = headers.entrySet().iterator(); iter.hasNext();) {
-			Map.Entry<String, String> entry = iter.next();
-			String key = entry.getKey();
-			String value = entry.getValue();
-			req.addHeader(key, value);
-			info("addHeader{" + key + ":" + value + "}");
-		}
-	}
+	private void post(String uri, HttpServletRequest req, HttpServletResponse resp) throws IOException {
+		HttpURLConnection conn = this.openConnection(TOURL + uri);
+		conn.setRequestMethod("POST");
 
-	private void sendRes(HttpServletResponse response, HttpResponse res) {
-		BufferedReader in = null;
+		InputStream fromIn = null;
+		OutputStream toOut = null;
+
 		try {
-			response.setStatus(res.getStatusLine().getStatusCode());
-			in = new BufferedReader(new InputStreamReader(res.getEntity().getContent(), "utf-8"));
-			StringBuffer sb = new StringBuffer("");
-			String line = "";
-			String NL = System.getProperty("line.separator");
-			while ((line = in.readLine()) != null) {
-				sb.append(line + NL);
-			}
-			response.getWriter().write(sb.toString());
+			this.copyReqHeaders(req, conn);
+			toOut = conn.getOutputStream();
+			fromIn = req.getInputStream();
+			// 转发请求头
+			// 请求主体
+			this.copyStream(fromIn, toOut);
+			// 响应头
+			this.copyRespHeaders(conn, resp);
+			// 响应主题
+			this.copyResponse(conn, resp);
 		} catch (Exception e) {
 			e.printStackTrace();
 		} finally {
-			if (in != null) {
-				try {
-					in.close();
-				} catch (IOException e) {
-					e.printStackTrace();
-				}
+			close(fromIn);
+			close(toOut);
+		}
+	}
+
+	private void copyRespHeaders(HttpURLConnection conn, HttpServletResponse resp) {
+		Map<String, List<String>> headerFields = conn.getHeaderFields();
+		for (Iterator<Map.Entry<String, List<String>>> iter = headerFields.entrySet().iterator(); iter.hasNext();) {
+			Entry<String, List<String>> entry = iter.next();
+			List<String> values = entry.getValue();
+			if (values.size() >= 1) {
+				resp.setHeader(entry.getKey(), values.get(0));
+			}
+		}
+	}
+
+	private void copyResponse(HttpURLConnection conn, HttpServletResponse resp) {
+		OutputStream fromOut = null;
+		InputStream toIn = null;
+		try {
+			toIn = conn.getInputStream();
+			fromOut = resp.getOutputStream();
+			this.copyStream(toIn, fromOut);
+		} catch (Exception e) {
+			e.printStackTrace();
+		} finally {
+			close(toIn);
+			close(fromOut);
+		}
+	}
+
+	private void copyStream(InputStream in, OutputStream out) throws IOException {
+		byte[] onecData = new byte[1024];
+		int length = -1;
+		while ((length = in.read(onecData)) != -1) {
+			if (length < 1024) {
+				out.write(onecData, 0, length);
+			} else {
+				out.write(onecData);
+			}
+		}
+	}
+
+	private void copyReqHeaders(HttpServletRequest req, HttpURLConnection conn) {
+		Enumeration<String> names = req.getHeaderNames();
+		while (names.hasMoreElements()) {
+			String key = names.nextElement();
+			// if ("Content-Length".equalsIgnoreCase(key)) {
+			// continue;
+			// }
+			String value = req.getHeader(key);
+			conn.setRequestProperty(key, value);
+			info("copyHeader : key=" + key + "  value=" + value);
+		}
+	}
+
+	private HttpURLConnection openConnection(String strUrl) throws IOException {
+		URL url = new URL(strUrl);
+		HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+		conn.setDoOutput(true);
+		conn.setDoInput(true);
+		conn.setConnectTimeout(60 * 1000);
+		conn.setReadTimeout(60 * 1000);
+		return conn;
+	}
+
+	private void close(Closeable closeable) {
+		if (closeable != null) {
+			try {
+				closeable.close();
+			} catch (IOException e) {
+				e.printStackTrace();
 			}
 		}
 	}
