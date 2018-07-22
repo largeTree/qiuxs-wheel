@@ -37,7 +37,7 @@ public class EntryServlet extends HttpServlet {
 
 	@Override
 	protected void service(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-		System.out.println("----------------------  start  --------------------------");
+		info("---------------------- Request start  --------------------------");
 
 		// requestURI
 		String requestURI = req.getRequestURI();
@@ -45,7 +45,7 @@ public class EntryServlet extends HttpServlet {
 
 		// 请求方法
 		String method = req.getMethod();
-		System.out.println("requestMethod:" + method);
+		info("requestMethod:" + method);
 
 		// 请求参数
 		Enumeration<String> names = req.getParameterNames();
@@ -54,7 +54,7 @@ public class EntryServlet extends HttpServlet {
 			String key = names.nextElement();
 			params.put(key, req.getParameter(key));
 		}
-		System.out.println("params:" + params.toString());
+		info("params:" + params.toString());
 
 		// 请求头
 		names = req.getHeaderNames();
@@ -66,28 +66,32 @@ public class EntryServlet extends HttpServlet {
 			}
 			headers.put(key, req.getHeader(key));
 		}
-		System.out.println("headers:" + headers.toString());
+		info("headers:" + headers.toString());
 		String remoteAddr = req.getRemoteAddr();
-		System.out.println("remoteAddr:" + remoteAddr);
+		info("remoteAddr:" + remoteAddr);
 		// 发送代理
 		sendProxy(method, params, headers, resp);
-		System.out.println("----------------------  end  --------------------------\n\n");
+		info("---------------------- Request end  --------------------------\n\n");
 	}
 
 	private void sendProxy(String method, Map<String, String> params, Map<String, String> headers,
 			HttpServletResponse response) {
-		if ("post".equalsIgnoreCase(method.toLowerCase())) {
+		info("---------------------- sendProxy start  --------------------------");
+		if ("post".equalsIgnoreCase(method)) {
+			info("---------------------- doPost start  --------------------------");
 			HttpPost post = new HttpPost(TOURL);
 			setHeader(headers, post);
 			List<NameValuePair> nvps = new ArrayList<>();
+			info("addParams...");
 			for (Iterator<Map.Entry<String, String>> iter = params.entrySet().iterator(); iter.hasNext();) {
 				Map.Entry<String, String> entry = iter.next();
 				String key = entry.getKey();
 				String value = entry.getValue();
 				nvps.add(new BasicNameValuePair(key, value));
-				System.out.println("addParams:{" + key + ":" + value + "}");
+				info("addOneParams:{" + key + ":" + value + "}");
 			}
 			try {
+				info("paramsSize:" + nvps.size());
 				post.setEntity(new UrlEncodedFormEntity(nvps, "utf-8"));
 				HttpResponse res = this.client.execute(post);
 				sendRes(response, res);
@@ -96,7 +100,9 @@ public class EntryServlet extends HttpServlet {
 			} finally {
 				post.completed();
 			}
-		} else if ("get".equalsIgnoreCase(method.toLowerCase())) {
+			info("---------------------- doPost end  --------------------------");
+		} else if ("get".equalsIgnoreCase(method)) {
+			info("---------------------- doGet start  --------------------------");
 			StringBuilder queryString = new StringBuilder("?");
 			for (Iterator<Map.Entry<String, String>> iter = params.entrySet().iterator(); iter.hasNext();) {
 				Map.Entry<String, String> entry = iter.next();
@@ -105,6 +111,7 @@ public class EntryServlet extends HttpServlet {
 					queryString.append("&");
 				}
 			}
+			info("queryString:" + queryString.toString());
 			HttpGet get = new HttpGet(TOURL + queryString.toString());
 			setHeader(headers, get);
 			try {
@@ -113,13 +120,19 @@ public class EntryServlet extends HttpServlet {
 			} catch (IOException e) {
 				e.printStackTrace();
 			}
+			info("---------------------- doGet end  --------------------------");
 		}
+		info("---------------------- sendProxy end  --------------------------");
 	}
 
 	private void setHeader(Map<String, String> headers, HttpRequestBase req) {
+		info("sedHeaders...");
 		for (Iterator<Map.Entry<String, String>> iter = headers.entrySet().iterator(); iter.hasNext();) {
 			Map.Entry<String, String> entry = iter.next();
-			req.addHeader(entry.getKey(), entry.getValue());
+			String key = entry.getKey();
+			String value = entry.getValue();
+			req.addHeader(key, value);
+			info("addHeader{" + key + ":" + value + "}");
 		}
 	}
 
@@ -147,4 +160,9 @@ public class EntryServlet extends HttpServlet {
 			}
 		}
 	}
+
+	private void info(String log) {
+		System.out.println(log);
+	}
+
 }
